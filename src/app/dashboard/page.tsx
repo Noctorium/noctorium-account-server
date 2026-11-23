@@ -12,6 +12,8 @@ import { settings as securityOf } from "@/lib/verification"
 
 export const dynamic = "force-dynamic"
 
+const SHOW_STATUS = false
+
 export default async function Dashboard({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const said = await searchParams
   const jar = await cookies()
@@ -111,6 +113,9 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       </p>
       <Security settings={security} telegramLinked={Boolean(ways.linked.telegram)} />
 
+      {/* shortcut: hidden until Discord grants activities.write; turn SHOW_STATUS back on then. */}
+      {SHOW_STATUS && (
+        <>
       <h2>Show what you play</h2>
       <p className="muted">
         Your Discord status and your Telegram bio show the song you are playing in Noctorium — from your phone or any
@@ -134,6 +139,8 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           })}
         </tbody>
       </table>
+        </>
+      )}
 
       <h2>Scrobbling</h2>
       <p className="muted">
