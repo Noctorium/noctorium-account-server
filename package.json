@@ -1,0 +1,33 @@
+{
+  "name": "noctorium-account-server",
+  "version": "0.32.1",
+  "private": true,
+  "description": "The Noctorium account: sign-in, two-step verification and linked services",
+  "scripts": {
+    "dev": "next dev",
+    "build": "node scripts/apply-schema.mjs && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --experimental-strip-types test/*.test.ts",
+    "db:push": "node scripts/apply-schema.mjs",
+    "dev:local": "node scripts/dev-local.mjs",
+    "seed:local": "node scripts/seed-local.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.1",
+    "jose": "^6.0.11",
+    "next": "^15.5.0",
+    "qrcode": "^1.5.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.3.16",
+    "@types/node": "^24.3.0",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "typescript": "^5.9.2"
+  }
+}
