@@ -26,8 +26,9 @@ export async function POST(request: Request) {
   const answer = async (result: object, freshEmail?: string) => {
     if ("error" in result) return jsonError(String(result.error), 400)
     if (freshEmail === undefined) return Response.json(result)
+    // In the cookie for a browser, and in the reply for an app, which would otherwise have signed itself out.
     const token = await issueToken({ userId: id, email: freshEmail })
-    return Response.json(result, { headers: { "Set-Cookie": cookieFor(token) } })
+    return Response.json({ ...result, token }, { headers: { "Set-Cookie": cookieFor(token) } })
   }
 
   switch (body.action) {
