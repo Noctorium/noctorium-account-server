@@ -155,3 +155,19 @@ CREATE TABLE IF NOT EXISTS sign_in_challenges (
     attempts         INT         NOT NULL DEFAULT 0,
     expires_at       TIMESTAMPTZ NOT NULL
 );
+
+-- Signing other devices out: every token carries the account's epoch as `ver`, and one with an older epoch no longer
+-- counts. Raised when the password or email changes.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS session_epoch INT NOT NULL DEFAULT 0;
+
+-- Profile pictures: a 256 px square image, served at /avatar/<avatar_key>. The key is random (nobody can walk through
+-- user numbers to collect pictures) and changes with every new picture, so caches never show an old one.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_key TEXT;
+CREATE TABLE IF NOT EXISTS avatars (
+    user_id      BIGINT      PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    image        BYTEA       NOT NULL,
+    content_type TEXT        NOT NULL,
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+-- The picture a Discord account had at its last sign-in or link, for "Use my Discord picture".
+ALTER TABLE identities ADD COLUMN IF NOT EXISTS avatar TEXT;

@@ -75,5 +75,11 @@ export async function profileFor(provider: OAuthProvider, code: string): Promise
   if (!tokenReply.ok || !token.access_token) throw new Error(`${provider} token: ${tokenReply.status}`)
   const auth = { authorization: `Bearer ${token.access_token}`, accept: "application/json", "user-agent": "Noctorium" }
   const user = await (await fetch("https://discord.com/api/v10/users/@me", { headers: auth })).json()
-  return { provider, id: String(user.id), name: user.global_name || user.username, email: user.verified && user.email ? user.email : null }
+  return {
+    provider,
+    id: String(user.id),
+    name: user.global_name || user.username,
+    email: user.verified && user.email ? user.email : null,
+    avatar: typeof user.avatar === "string" ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=256` : null,
+  }
 }

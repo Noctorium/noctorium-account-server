@@ -16,6 +16,9 @@ export function cookieFor(token: string): string {
   return [`${c.name}=${c.value}`, `Path=${c.path}`, `Max-Age=${c.maxAge}`, "HttpOnly", "SameSite=Lax", ...(c.secure ? ["Secure"] : []), ...(c.domain ? [`Domain=${c.domain}`] : [])].join("; ")
 }
 
+/** Clears the session cookie: with the same Domain it was set with, or the browser keeps the shared one. */
+export const clearedCookie = () => cookieFor("").replace(/Max-Age=\d+/, "Max-Age=0")
+
 /** A sign-in waiting for its codes, held by this browser alone for the ten minutes it lasts. */
 export const CHALLENGE_COOKIE = "noctorium_challenge"
 

@@ -1,5 +1,5 @@
 import { SignJWT, jwtVerify } from "jose"
-import { cookies } from "next/headers"
+import { db } from "./db.ts"
 
 /**
  * Who is signed in, for both the website and the desktop player.
@@ -25,8 +25,14 @@ function secret(): Uint8Array {
   return new TextEncoder().encode(value)
 }
 
+/** The account's sign-in epoch: a token with an older one is signed out. Null when the account is gone. */
+async function epochOf(userId: number): Promise<number | null> {
+  const [row] = (await db()`SELECT session_epoch FROM users WHERE id = ${userId}`) as { session_epoch: number }[]
+  return row ? Number(row.session_epoch) : null
+}
+
 export async function issueToken(session: Session): Promise<string> {
-  return new SignJWT({ email: session.email })
+  return new SignJWT({ email: session.email, ver: (await epochOf(session.userId)) ?? 0 })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(String(session.userId))
     .setIssuedAt()
@@ -43,6 +49,9 @@ export async function readToken(token: string | undefined | null): Promise<Sessi
     const email = typeof payload.email === "string" ? payload.email : null
     // An account made with Telegram has no email: "" in its token, never a missing claim.
     if (!Number.isInteger(userId) || userId <= 0 || email === null) return null
+    // Signed out by a password or email change (tokens from before epochs carry none: 0), or the account is deleted.
+    const epoch = await epochOf(userId)
+    if (epoch === null || (typeof payload.ver === "number" ? payload.ver : 0) < epoch) return null
     return { userId, email }
   } catch {
     return null
@@ -61,6 +70,8 @@ export async function currentSession(request: Request): Promise<Session | null> 
     const fromHeader = await readToken(header.slice(7).trim())
     if (fromHeader) return fromHeader
   }
+  // Loaded here, not at the top: only Next.js can load it, and the tests use the rest of this file.
+  const { cookies } = await import("next/headers")
   const jar = await cookies()
   return readToken(jar.get(SESSION_COOKIE)?.value)
 }

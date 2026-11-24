@@ -8,6 +8,8 @@ import { PROVIDER_NAMES, waysIn } from "@/lib/identity"
 import { SITE_NAMES, SITES, linked as scrobblersOf } from "@/lib/scrobblers"
 import Brand from "../brand"
 import Security from "./security"
+import Profile from "./profile"
+import { avatarUrlFor } from "@/lib/profile"
 import { settings as securityOf } from "@/lib/verification"
 
 export const dynamic = "force-dynamic"
@@ -21,9 +23,9 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   if (!session) redirect("/login")
 
   const sql = db()
-  const [profile] = (await sql`SELECT display_name FROM users WHERE id = ${session.userId} LIMIT 1`) as {
-    display_name: string
-  }[]
+  const [profile] = (await sql`
+    SELECT display_name, email, password_hash IS NOT NULL AS has_password, avatar_key FROM users WHERE id = ${session.userId} LIMIT 1
+  `) as { display_name: string; email: string | null; has_password: boolean; avatar_key: string | null }[]
   if (!profile) redirect("/login")
 
   const [linkRow] = (await sql`
@@ -63,6 +65,18 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         Your Noctorium account: how you sign in, how it is kept safe, and what it is linked to. Your listening figures are
         on <a href="https://stats.noctorium.xyz/dashboard">stats.noctorium.xyz</a>.
       </p>
+
+      <h2>Profile</h2>
+      <Profile
+        name={profile.display_name}
+        email={profile.email}
+        avatarUrl={avatarUrlFor(profile.avatar_key)}
+        hasPassword={profile.has_password}
+        twoStep={security.totp || security.telegram}
+        telegramCodes={security.telegram}
+        discordLinked={Boolean(ways.linked.discord)}
+        telegramLinked={Boolean(ways.linked.telegram)}
+      />
 
       <h2>Ways to sign in</h2>
       <table className="ways">

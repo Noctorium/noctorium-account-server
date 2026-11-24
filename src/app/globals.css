@@ -87,3 +87,10 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .codes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 18px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 15px; margin: 12px 0; }
 .qr { display: block; margin: 12px auto; border-radius: 12px; background: #fff; padding: 8px; }
 .security td:first-child { width: 42%; }
+
+/* Profile: the round picture (or the name's first letter) and what can be done with it. */
+.avatar { display: inline-grid; place-items: center; flex: none; border-radius: 50%; object-fit: cover; background: var(--panel-2); color: var(--accent); font-weight: 700; box-shadow: 0 0 0 1px var(--line); }
+.profile { display: flex; align-items: center; gap: 18px; margin: 4px 0 16px; }
+.profile-actions { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+button.danger { background: var(--danger); color: #1a0508; }
+.danger-link { color: var(--danger); }

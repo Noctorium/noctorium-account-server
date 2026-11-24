@@ -15,7 +15,8 @@ export const PROVIDERS: Provider[] = ["discord", "telegram"]
 export const PROVIDER_NAMES: Record<Provider, string> = { discord: "Discord", telegram: "Telegram" }
 
 /** What a provider says about who signed in. `email` only when the provider says it is verified. */
-export type ProviderProfile = { provider: Provider; id: string; name: string; email: string | null }
+/** `avatar`: the address of the account's picture there, when the provider gives one (Discord does). */
+export type ProviderProfile = { provider: Provider; id: string; name: string; email: string | null; avatar?: string | null }
 
 export type SignedIn = { id: number; email: string; displayName: string; created: boolean }
 
@@ -27,7 +28,7 @@ export async function signInWith(profile: ProviderProfile): Promise<SignedIn> {
     WHERE i.provider = ${profile.provider} AND i.provider_user_id = ${profile.id} LIMIT 1
   `) as { id: number; email: string | null; display_name: string }[]
   if (linked) {
-    await sql`UPDATE identities SET name = ${profile.name} WHERE provider = ${profile.provider} AND provider_user_id = ${profile.id}`
+    await sql`UPDATE identities SET name = ${profile.name}, avatar = COALESCE(${profile.avatar ?? null}, avatar) WHERE provider = ${profile.provider} AND provider_user_id = ${profile.id}`
     return { id: Number(linked.id), email: linked.email ?? "", displayName: linked.display_name, created: false }
   }
 
@@ -42,8 +43,8 @@ export async function signInWith(profile: ProviderProfile): Promise<SignedIn> {
     RETURNING id, email, display_name
   `) as { id: number; email: string | null; display_name: string }[]
   await sql`
-    INSERT INTO identities (provider, provider_user_id, user_id, name)
-    VALUES (${profile.provider}, ${profile.id}, ${user.id}, ${profile.name})
+    INSERT INTO identities (provider, provider_user_id, user_id, name, avatar)
+    VALUES (${profile.provider}, ${profile.id}, ${user.id}, ${profile.name}, ${profile.avatar ?? null})
   `
   return { id: Number(user.id), email: user.email ?? "", displayName: user.display_name, created: true }
 }
@@ -58,8 +59,8 @@ export async function link(userId: number, profile: ProviderProfile): Promise<"l
   // One of each provider per account: linking another Discord replaces the first.
   await sql`DELETE FROM identities WHERE user_id = ${userId} AND provider = ${profile.provider}`
   await sql`
-    INSERT INTO identities (provider, provider_user_id, user_id, name)
-    VALUES (${profile.provider}, ${profile.id}, ${userId}, ${profile.name})
+    INSERT INTO identities (provider, provider_user_id, user_id, name, avatar)
+    VALUES (${profile.provider}, ${profile.id}, ${userId}, ${profile.name}, ${profile.avatar ?? null})
   `
   return "linked"
 }
